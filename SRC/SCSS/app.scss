@@ -1,5 +1,12 @@
-@use 'BASE/botones' as *;
-@use 'BASE/globales' as *;
-@use 'BASE/mixins' as *;
-@use 'BASE/utilidades' as *;
-@use 'BASE/variables' as *;
+@use 'base/variables' as *;
+@use 'base/mixins' as *;
+@use 'base/globales';
+@use 'base/utilidades';
+@use 'base/botones';
+
+@use 'layout/login';
+@use 'layout/dashboard';
+@use 'layout/alumno';
+@use 'layout/asistencia';
+@use 'layout/reporte';
+@use 'layout/pagos';

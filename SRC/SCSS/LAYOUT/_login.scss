@@ -1,0 +1,75 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+
+.login {
+    background-color: v.$gris_claro;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &__contenedor {
+        max-width: 40rem;
+        width: 95%;
+        background-color: v.$blanco;
+        padding: 2rem;
+        border-radius: .5rem;
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .1);
+    }
+
+    &__logo {
+        max-width: 20rem;
+        margin: 0 auto 2rem auto;
+    }
+
+    &__heading {
+        text-align: center;
+        color: v.$azul_principal;
+        margin-bottom: 3rem;
+    }
+
+    &__formulario {
+        margin-top: 2rem;
+    }
+
+    &__campo {
+        margin-bottom: 2rem;
+    }
+
+    &__label {
+        display: block;
+        font-size: 1.6rem;
+        margin-bottom: .5rem;
+        color: v.$azul_principal;
+    }
+
+    &__input {
+        width: 100%;
+        padding: 1rem;
+        border: 1px solid v.$gris_medio;
+        border-radius: .5rem;
+        font-size: 1.6rem;
+
+        &:focus {
+            outline: none;
+            border-color: v.$azul_claro;
+        }
+    }
+
+    &__submit {
+        @include m.boton(v.$azul_principal, block);
+        margin-top: 3rem;
+    }
+
+    &__enlace {
+        display: block;
+        margin-top: 2rem;
+        text-align: center;
+        color: v.$azul_claro;
+        transition: color .3s ease;
+
+        &:hover {
+            color: v.$azul_principal;
+        }
+    }
+}

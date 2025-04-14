@@ -1,0 +1,176 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+@use "sass:color";
+
+.pagos {
+    &__buscador {
+        margin-top: 2rem;
+        display: flex;
+        gap: 1rem;
+    }
+
+    &__busqueda {
+        flex: 1;
+        padding: 1rem;
+        border: 1px solid v.$gris_medio;
+        border-radius: .5rem;
+        font-size: 1.6rem;
+
+        &:focus {
+            outline: none;
+            border-color: v.$azul_claro;
+        }
+    }
+
+    &__boton {
+        @include m.boton(v.$azul_principal, inline-block);
+    }
+
+    &__grid {
+        margin-top: 2rem;
+        display: grid;
+        gap: 2rem;
+
+        @include m.tablet {
+            grid-template-columns: 2fr 1fr;
+        }
+    }
+
+    &__tabla {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    &__thead {
+        background-color: v.$azul_principal;
+        color: v.$blanco;
+    }
+
+    &__th {
+        padding: 1rem;
+        text-align: left;
+    }
+
+    &__tbody {
+        background-color: v.$blanco;
+    }
+
+    &__tr {
+        border-bottom: 1px solid v.$gris_medio;
+
+        &:last-of-type {
+            border-bottom: none;
+        }
+    }
+
+    &__td {
+        padding: 1rem;
+    }
+
+    &__estado {
+        display: inline-block;
+        padding: .5rem 1rem;
+        border-radius: 2rem;
+        text-transform: uppercase;
+        font-weight: v.$bold;
+        font-size: 1.2rem;
+        color: v.$blanco;
+
+        &--pagado {
+            background-color: v.$verde_exito;
+        }
+
+        &--pendiente {
+            background-color: v.$amarillo_advertencia;
+        }
+    }
+
+    &__acciones {
+        display: flex;
+        gap: 1rem;
+    }
+
+    &__accion {
+        padding: .7rem 1.2rem;
+        border-radius: .5rem;
+        font-size: 1.4rem;
+        font-weight: v.$bold;
+        transition: all .3s ease;
+
+        &--registrar {
+            background-color: v.$verde_exito;
+            color: v.$blanco;
+
+            &:hover {
+                background-color: color.scale(v.$verde_exito, $lightness: -10%);
+            }
+        }
+
+        &--historial {
+            background-color: v.$azul_informacion;
+            color: v.$blanco;
+
+            &:hover {
+                background-color: color.scale(v.$azul_informacion, $lightness: -10%);
+            }
+        }
+    }
+
+    &__resumen {
+        background-color: v.$blanco;
+        padding: 2rem;
+        border-radius: .5rem;
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .1);
+    }
+
+    &__resumen-titulo {
+        color: v.$azul_principal;
+        font-size: 2rem;
+        margin-top: 0;
+    }
+
+    &__resumen-texto {
+        margin-bottom: 1rem;
+        font-size: 1.6rem;
+    }
+
+    &__resumen-cantidad {
+        font-weight: v.$bold;
+        color: v.$azul_principal;
+    }
+
+    &__formulario {
+        margin-top: 2rem;
+    }
+
+    &__campo {
+        margin-bottom: 2rem;
+    }
+
+    &__label {
+        display: block;
+        font-size: 1.6rem;
+        margin-bottom: .5rem;
+        color: v.$azul_principal;
+    }
+
+    &__input,
+    &__select {
+        width: 100%;
+        padding: 1rem;
+        border: 1px solid v.$gris_medio;
+        border-radius: .5rem;
+        font-size: 1.6rem;
+
+        &:focus {
+            outline: none;
+            border-color: v.$azul_claro;
+        }
+    }
+
+    &__submit {
+        @include m.boton(v.$verde_exito, block);
+        margin-top: 3rem;
+    }
+}

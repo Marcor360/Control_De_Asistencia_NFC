@@ -1,0 +1,132 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+@use "sass:color";
+
+.alumnos {
+    &__grid {
+        display: grid;
+        gap: 2rem;
+        margin-top: 2rem;
+
+        @include m.tablet {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        @include m.desktop {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    &__formulario {
+        margin-top: 2rem;
+    }
+
+    &__campo {
+        margin-bottom: 2rem;
+    }
+
+    &__label {
+        display: block;
+        font-size: 1.6rem;
+        margin-bottom: .5rem;
+        color: v.$azul_principal;
+    }
+
+    &__input {
+        width: 100%;
+        padding: 1rem;
+        border: 1px solid v.$gris_medio;
+        border-radius: .5rem;
+        font-size: 1.6rem;
+
+        &:focus {
+            outline: none;
+            border-color: v.$azul_claro;
+        }
+    }
+
+    &__submit {
+        @include m.boton(v.$azul_principal, block);
+        margin-top: 3rem;
+    }
+
+    &__card {
+        background-color: v.$blanco;
+        border-radius: .5rem;
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .1);
+        padding: 2rem;
+    }
+
+    &__nombre {
+        font-size: 2rem;
+        margin: 0 0 1rem 0;
+        color: v.$azul_principal;
+    }
+
+    &__datos {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    &__dato {
+        margin-bottom: .5rem;
+        font-size: 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+    &__estado {
+        margin-top: 1rem;
+        display: inline-block;
+        padding: .5rem 1rem;
+        color: v.$blanco;
+        font-size: 1.2rem;
+        border-radius: 2rem;
+        text-transform: uppercase;
+        font-weight: v.$bold;
+
+        &--activo {
+            background-color: v.$verde_exito;
+        }
+
+        &--inactivo {
+            background-color: v.$rojo_alerta;
+        }
+    }
+
+    &__acciones {
+        margin-top: 2rem;
+        display: flex;
+        gap: 1rem;
+    }
+
+    &__accion {
+        flex: 1;
+        text-align: center;
+        padding: .7rem;
+        border-radius: .5rem;
+        font-size: 1.4rem;
+        font-weight: v.$bold;
+        transition: all .3s ease;
+
+        &--editar {
+            background-color: v.$azul_informacion;
+            color: v.$blanco;
+
+            &:hover {
+                background-color: color.scale(v.$azul_informacion, $lightness: -10%);
+            }
+        }
+
+        &--eliminar {
+            background-color: v.$rojo_alerta;
+            color: v.$blanco;
+
+            &:hover {
+                background-color: color.scale(v.$rojo_alerta, $lightness: -10%);
+            }
+        }
+    }
+}

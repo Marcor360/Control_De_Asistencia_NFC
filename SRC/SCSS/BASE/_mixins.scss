@@ -39,7 +39,7 @@
     border: none;
 
     &:hover {
-        background-color: color.adjust($bgColor, $lightness: -5 * 1%);
+        background-color: color.scale($bgColor, $lightness: -10%);
         cursor: pointer;
     }
 }

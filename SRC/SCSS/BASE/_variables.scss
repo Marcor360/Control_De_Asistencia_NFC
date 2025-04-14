@@ -10,18 +10,23 @@ $desktop: 1024px;
 
 // Colores
 $negro: #000000;
-$amarillo: #E08709;
-;
-$verde: #71B100;
+$azul_principal: #0B2E62;
+$naranja_acento: #D84B16;
 $blanco: #FFFFFF;
-$gris: #e1e1e1;
-$grisOscuro: #333333;
+$gris_claro: #F5F5F5;
+$gris_medio: #E0E0E0;
+$azul_claro: #3A5B8C;
+
+// Colores de Estado
+$verde_exito: #5CB85C;
+$rojo_alerta: #D9534F;
+$amarillo_advertencia: #F0AD4E;
+$azul_informacion: #5BC0DE;
 
 $separacion: 5rem;
 
 // Fuentes
-
 $delgada: 300;
-$regular : 400;
+$regular: 400;
 $bold: 700;
 $black: 900

@@ -1,0 +1,152 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+
+.asistencia {
+    &__lector {
+        margin-top: 2rem;
+        text-align: center;
+    }
+
+    &__instruccion {
+        margin-bottom: 2rem;
+        font-size: 1.8rem;
+        color: v.$azul_principal;
+    }
+
+    &__nfc {
+        width: 12rem;
+        height: 12rem;
+        margin: 0 auto;
+        border-radius: 50%;
+        background-color: v.$gris_claro;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all .3s ease;
+        cursor: pointer;
+
+        &:hover {
+            background-color: v.$gris_medio;
+            transform: scale(1.05);
+        }
+    }
+
+    &__nfc-icono {
+        font-size: 5rem;
+        color: v.$azul_principal;
+    }
+
+    &__estado {
+        margin-top: 2rem;
+        font-size: 1.6rem;
+    }
+
+    &__leyendo {
+        color: v.$azul_informacion;
+    }
+
+    &__exito {
+        color: v.$verde_exito;
+    }
+
+    &__error {
+        color: v.$rojo_alerta;
+    }
+
+    &__alumno {
+        margin-top: 2rem;
+        text-align: center;
+    }
+
+    &__alumno-nombre {
+        font-size: 2.4rem;
+        color: v.$azul_principal;
+        margin: 0;
+    }
+
+    &__registro {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    &__hora {
+        font-size: 1.6rem;
+        font-weight: v.$bold;
+    }
+
+    &__tipo {
+        font-size: 1.4rem;
+        padding: .5rem 1rem;
+        border-radius: 2rem;
+        color: v.$blanco;
+        font-weight: v.$bold;
+
+        &--entrada {
+            background-color: v.$verde_exito;
+        }
+
+        &--salida {
+            background-color: v.$naranja_acento;
+        }
+    }
+
+    &__registros {
+        margin-top: 3rem;
+    }
+
+    &__tabla {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    &__thead {
+        background-color: v.$azul_principal;
+        color: v.$blanco;
+    }
+
+    &__th {
+        padding: 1rem;
+        text-align: left;
+    }
+
+    &__tbody {
+        background-color: v.$blanco;
+    }
+
+    &__tr {
+        border-bottom: 1px solid v.$gris_medio;
+
+        &:last-of-type {
+            border-bottom: none;
+        }
+    }
+
+    &__td {
+        padding: 1rem;
+    }
+
+    &__paginacion {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    &__enlace {
+        padding: .7rem 1.2rem;
+        border: 1px solid v.$azul_principal;
+        border-radius: .5rem;
+        color: v.$azul_principal;
+        transition: all .3s ease;
+
+        &:hover,
+        &--actual {
+            background-color: v.$azul_principal;
+            color: v.$blanco;
+        }
+    }
+}
