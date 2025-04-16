@@ -1,0 +1,40 @@
+# .htaccess (en la raíz del proyecto)
+Options -Indexes
+RewriteEngine On
+
+# Proteger archivos de configuración
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Proteger archivos sensibles
+<FilesMatch "^(database\.php|config\.php)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Proteger archivos PHP en directorios específicos
+<FilesMatch "^(includes|modelos|controladores|config)/.*\.php$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Evitar acceso a archivos con estas extensiones
+<FilesMatch "\.(ini|log|sh|sql|json)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Prevenir el hot-linking de imágenes
+RewriteCond %{HTTP_REFERER} !^$
+RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?tudominio.com [NC]
+RewriteRule \.(jpg|jpeg|png|gif)$ - [NC,F,L]
+
+# Prevenir ataques XSS básicos
+<IfModule mod_headers.c>
+    Header set X-XSS-Protection "1; mode=block"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline';"
+</IfModule>
