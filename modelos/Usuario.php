@@ -15,7 +15,7 @@ class Usuario
 
     public function __construct()
     {
-        $this->db = Database::getInstancia();
+        $this->db = Database::getInstancia()->getConexion();
     }
 
     // Verificar login

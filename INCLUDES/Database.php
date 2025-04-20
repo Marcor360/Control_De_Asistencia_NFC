@@ -12,13 +12,14 @@ class Database
     {
         try {
             $this->conexion = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-            $this->conexion->set_charset(DB_CHARSET);
 
             if ($this->conexion->connect_error) {
                 throw new Exception("Error de conexión: " . $this->conexion->connect_error);
             }
+
+            $this->conexion->set_charset(DB_CHARSET);
         } catch (Exception $e) {
-            die("Error: " . $e->getMessage());
+            die("Error en la conexión a la base de datos: " . $e->getMessage());
         }
     }
 
