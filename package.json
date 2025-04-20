@@ -2,6 +2,7 @@
   "name": "ds",
   "version": "1.0.0",
   "description": "Desarollo de sistema de asistencia con tecnologia NFC",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "gulp"

@@ -1,0 +1,35 @@
+@use 'variables' as v;
+@use "sass:color";
+
+.alerta {
+    padding: 1.5rem;
+    margin: 1rem 0;
+    border-radius: .5rem;
+    font-size: 1.4rem;
+    font-weight: v.$bold;
+    text-align: center;
+
+    &-error {
+        background-color: color.scale(v.$rojo_alerta, $lightness: 70%);
+        border: 1px solid v.$rojo_alerta;
+        color: color.scale(v.$rojo_alerta, $lightness: -35%);
+    }
+
+    &-exito {
+        background-color: color.scale(v.$verde_exito, $lightness: 65%);
+        border: 1px solid v.$verde_exito;
+        color: color.scale(v.$verde_exito, $lightness: -37%);
+    }
+
+    &-info {
+        background-color: color.scale(v.$azul_informacion, $lightness: 75%);
+        border: 1px solid v.$azul_informacion;
+        color: color.scale(v.$azul_informacion, $lightness: -35%);
+    }
+
+    &-advertencia {
+        background-color: color.scale(v.$amarillo_advertencia, $lightness: 70%);
+        border: 1px solid v.$amarillo_advertencia;
+        color: color.scale(v.$amarillo_advertencia, $lightness: -35%);
+    }
+}

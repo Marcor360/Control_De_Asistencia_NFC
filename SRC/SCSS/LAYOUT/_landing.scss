@@ -1,0 +1,153 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+
+.landing {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+    &__header {
+        background-color: v.$azul_principal;
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        @include m.tablet {
+            justify-content: flex-start;
+        }
+    }
+
+    &__logo {
+        max-width: 15rem;
+
+        @include m.tablet {
+            max-width: 20rem;
+        }
+    }
+
+    &__contenedor {
+        flex: 1;
+        padding: 2rem;
+        display: flex;
+        align-items: center;
+    }
+
+    &__grid {
+        width: 100%;
+        max-width: 120rem;
+        margin: 0 auto;
+        display: grid;
+        gap: 4rem;
+        align-items: center;
+
+        @include m.tablet {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    &__texto {
+        text-align: center;
+
+        @include m.tablet {
+            text-align: left;
+        }
+    }
+
+    &__heading {
+        color: v.$azul_principal;
+        margin-top: 0;
+    }
+
+    &__descripcion {
+        font-size: 1.8rem;
+        line-height: 1.8;
+    }
+
+    &__botones {
+        margin-top: 3rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+
+        @include m.tablet {
+            flex-direction: row;
+        }
+    }
+
+    &__imagen {
+        display: none;
+
+        @include m.tablet {
+            display: block;
+        }
+
+        img {
+            max-width: 100%;
+            border-radius: 1rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        }
+    }
+}
+
+.caracteristicas {
+    background-color: v.$gris_claro;
+    padding: 5rem 0;
+
+    &__heading {
+        text-align: center;
+        color: v.$azul_principal;
+        margin-bottom: 4rem;
+    }
+
+    &__grid {
+        display: grid;
+        gap: 4rem;
+
+        @include m.tablet {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+}
+
+.caracteristica {
+    text-align: center;
+
+    &__icono {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 8rem;
+        height: 8rem;
+        background-color: v.$azul_claro;
+        border-radius: 50%;
+        margin: 0 auto 2rem auto;
+
+        i {
+            font-size: 3.5rem;
+            color: v.$blanco;
+        }
+    }
+
+    &__titulo {
+        color: v.$azul_principal;
+        margin: 1rem 0;
+    }
+
+    p {
+        font-size: 1.6rem;
+    }
+}
+
+.footer {
+    background-color: v.$azul_principal;
+    color: v.$blanco;
+    padding: 3rem 0;
+    text-align: center;
+
+    p {
+        color: v.$blanco;
+        margin: 0.5rem 0;
+        font-size: 1.6rem;
+    }
+}

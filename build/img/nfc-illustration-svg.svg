@@ -1,0 +1,39 @@
+<svg width="500" height="400" viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo -->
+  <rect width="500" height="400" fill="#F5F5F5" rx="15" />
+  
+  <!-- Smartphone -->
+  <rect x="100" y="80" width="180" height="300" rx="20" fill="#3A5B8C" />
+  <rect x="110" y="100" width="160" height="240" rx="5" fill="#FFFFFF" />
+  
+  <!-- Círculo central en pantalla -->
+  <circle cx="190" cy="220" r="70" fill="#F0F0F0" />
+  <circle cx="190" cy="220" r="55" fill="none" stroke="#0B2E62" stroke-width="4" />
+  <circle cx="190" cy="220" r="40" fill="none" stroke="#0B2E62" stroke-width="3" stroke-dasharray="6 3" />
+  
+  <!-- Botón home -->
+  <circle cx="190" cy="365" r="15" fill="#E0E0E0" stroke="#3A5B8C" stroke-width="2" />
+  
+  <!-- Tarjeta NFC -->
+  <g transform="translate(310, 180) rotate(15)">
+    <rect x="-75" y="-50" width="150" height="100" rx="10" fill="#D84B16" />
+    <rect x="-65" y="-40" width="130" height="80" rx="5" fill="#F0AD4E" />
+    
+    <!-- Chip -->
+    <rect x="-40" y="-25" width="25" height="25" rx="2" fill="#E0E0E0" stroke="#0B2E62" stroke-width="1" />
+    
+    <!-- Líneas antena -->
+    <rect x="-55" y="-30" width="110" height="5" rx="2" fill="none" stroke="#0B2E62" stroke-width="1" />
+    <rect x="-55" y="25" width="110" height="5" rx="2" fill="none" stroke="#0B2E62" stroke-width="1" />
+    <rect x="-55" y="-30" width="5" height="60" rx="2" fill="none" stroke="#0B2E62" stroke-width="1" />
+    <rect x="50" y="-30" width="5" height="60" rx="2" fill="none" stroke="#0B2E62" stroke-width="1" />
+  </g>
+  
+  <!-- Ondas NFC -->
+  <path d="M 235,170 Q 280,220 235,270" stroke="#5BC0DE" stroke-width="6" fill="none" />
+  <path d="M 250,150 Q 310,220 250,290" stroke="#5BC0DE" stroke-width="6" fill="none" />
+  <path d="M 265,130 Q 340,220 265,310" stroke="#5BC0DE" stroke-width="6" fill="none" />
+  
+  <!-- Texto indicador -->
+  <text x="250" y="40" font-family="Arial" font-size="24" font-weight="bold" fill="#0B2E62" text-anchor="middle">Tecnología NFC</text>
+</svg>

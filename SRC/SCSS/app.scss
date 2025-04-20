@@ -3,6 +3,7 @@
 @use 'base/globales';
 @use 'base/utilidades';
 @use 'base/botones';
+@use 'base/alertas';
 
 @use 'layout/login';
 @use 'layout/dashboard';
@@ -10,3 +11,4 @@
 @use 'layout/asistencia';
 @use 'layout/reporte';
 @use 'layout/pagos';
+@use 'layout/landing';
