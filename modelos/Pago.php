@@ -12,273 +12,295 @@ class Pago
     }
 
     /**
-     * Registrar un nuevo pago
+     * Registra un nuevo pago
+     * @param array $datos Datos del pago
+     * @return int|bool ID del pago creado o false si falla
      */
-    public function registrarPago($pago)
+    public function registrar($datos)
     {
-        // Iniciar transacción
-        $this->db->begin_transaction();
+        $sql = "INSERT INTO pagos (id_alumno, id_periodo, monto, concepto, fecha_pago, metodo_pago, comprobante, estado_pago) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try {
-            // Insertar el pago
-            $sql = "INSERT INTO pagos (id_alumno, id_periodo, monto, concepto, fecha_pago, metodo_pago, comprobante, estado_pago) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            
-            $stmt = $this->db->prepare($sql);
-            $stmt->bind_param("iidsssss", 
-                $pago['id_alumno'], 
-                $pago['id_periodo'], 
-                $pago['monto'], 
-                $pago['concepto'], 
-                $pago['fecha_pago'], 
-                $pago['metodo_pago'], 
-                $pago['comprobante'], 
-                $pago['estado_pago']
-            );
+        $fechaPago = $datos['fecha_pago'] ?? date('Y-m-d H:i:s');
+        $estadoPago = $datos['estado_pago'] ?? 'Pagado';
 
-            $resultado = $stmt->execute();
-
-            if (!$resultado) {
-                throw new Exception("Error al registrar el pago");
-            }
-
-            // Actualizar el estado de pago del alumno si es necesario
-            // Solo si el estado de pago es diferente de "Al corriente"
-            $sql = "SELECT estatus_pago FROM alumno WHERE id_alumno = ?";
-            $stmt = $this->db->prepare($sql);
-            $stmt->bind_param("i", $pago['id_alumno']);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $alumno = $result->fetch_assoc();
-
-            if ($alumno['estatus_pago'] !== 'Al corriente') {
-                $sql = "UPDATE alumno SET estatus_pago = 'Al corriente' WHERE id_alumno = ?";
-                $stmt = $this->db->prepare($sql);
-                $stmt->bind_param("i", $pago['id_alumno']);
-                $resultado = $stmt->execute();
-
-                if (!$resultado) {
-                    throw new Exception("Error al actualizar el estado del alumno");
-                }
-            }
-
-            // Si todo está bien, confirmar la transacción
-            $this->db->commit();
-            return true;
-        } catch (Exception $e) {
-            // Si hay un error, deshacer la transacción
-            $this->db->rollback();
-            return false;
-        }
-    }
-
-    /**
-     * Obtener todos los pagos
-     */
-    public function obtenerTodos()
-    {
-        $sql = "SELECT p.*, CONCAT(a.nombre, ' ', a.apellidos) as nombre_completo, pp.mes_año as periodo
-                FROM pagos p
-                JOIN alumno a ON p.id_alumno = a.id_alumno
-                JOIN periodo_pago pp ON p.id_periodo = pp.id_periodo
-                ORDER BY p.fecha_pago DESC";
-        
-        $resultado = $this->db->query($sql);
-        
-        $pagos = [];
-        if ($resultado && $resultado->num_rows > 0) {
-            while ($pago = $resultado->fetch_assoc()) {
-                $pagos[] = $pago;
-            }
-        }
-        
-        return $pagos;
-    }
-
-    /**
-     * Obtener un pago por su ID
-     */
-    public function obtenerPorId($id)
-    {
-        $sql = "SELECT p.*, CONCAT(a.nombre, ' ', a.apellidos) as nombre_completo, pp.mes_año as periodo
-                FROM pagos p
-                JOIN alumno a ON p.id_alumno = a.id_alumno
-                JOIN periodo_pago pp ON p.id_periodo = pp.id_periodo
-                WHERE p.id_pago = ?";
-        
         $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $resultado = $stmt->get_result();
-        
-        if ($resultado && $resultado->num_rows > 0) {
-            return $resultado->fetch_assoc();
+        $stmt->bind_param(
+            "iidssss",
+            $datos['id_alumno'],
+            $datos['id_periodo'],
+            $datos['monto'],
+            $datos['concepto'],
+            $fechaPago,
+            $datos['metodo_pago'],
+            $datos['comprobante'],
+            $estadoPago
+        );
+
+        if ($stmt->execute()) {
+            // Si el pago se registra como pagado, actualizar estatus del alumno
+            if ($estadoPago === 'Pagado') {
+                $this->actualizarEstatusAlumno($datos['id_alumno']);
+            }
+
+            return $this->db->insert_id;
         }
-        
-        return null;
+
+        return false;
     }
 
     /**
-     * Obtener pagos de un alumno específico
+     * Actualiza el estatus de pago de un alumno
+     * @param int $idAlumno ID del alumno
+     * @return bool Resultado de la operación
      */
-    public function obtenerPagosPorAlumno($idAlumno)
+    private function actualizarEstatusAlumno($idAlumno)
     {
-        $sql = "SELECT p.*, CONCAT(a.nombre, ' ', a.apellidos) as nombre_completo, pp.mes_año as periodo
-                FROM pagos p
-                JOIN alumno a ON p.id_alumno = a.id_alumno
-                JOIN periodo_pago pp ON p.id_periodo = pp.id_periodo
-                WHERE p.id_alumno = ?
-                ORDER BY p.fecha_pago DESC";
-        
+        // Verificar si hay pagos pendientes
+        $sql = "SELECT COUNT(*) as pendientes FROM pagos WHERE id_alumno = ? AND estado_pago = 'Pendiente'";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param("i", $idAlumno);
         $stmt->execute();
+
         $resultado = $stmt->get_result();
-        
-        $pagos = [];
-        if ($resultado && $resultado->num_rows > 0) {
-            while ($pago = $resultado->fetch_assoc()) {
-                $pagos[] = $pago;
-            }
+        $fila = $resultado->fetch_assoc();
+
+        // Determinar el nuevo estatus
+        $nuevoEstatus = ($fila['pendientes'] > 0) ? 'Pendiente' : 'Al corriente';
+
+        // Actualizar el estatus del alumno
+        $sqlUpdate = "UPDATE alumno SET estatus_pago = ? WHERE id_alumno = ?";
+        $stmtUpdate = $this->db->prepare($sqlUpdate);
+        $stmtUpdate->bind_param("si", $nuevoEstatus, $idAlumno);
+
+        return $stmtUpdate->execute();
+    }
+
+    /**
+     * Obtiene un pago por su ID
+     * @param int $id ID del pago
+     * @return array|false Datos del pago o false si no existe
+     */
+    public function obtenerPorId($id)
+    {
+        $sql = "SELECT p.*, pp.mes_año as periodo, CONCAT(a.nombre, ' ', a.apellidos) as nombre_alumno 
+                FROM pagos p
+                JOIN periodo_pago pp ON p.id_periodo = pp.id_periodo
+                JOIN alumno a ON p.id_alumno = a.id_alumno
+                WHERE p.id_pago = ?";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+
+        $resultado = $stmt->get_result();
+
+        if ($resultado->num_rows > 0) {
+            return $resultado->fetch_assoc();
         }
-        
+
+        return false;
+    }
+
+    /**
+     * Obtiene pagos por alumno
+     * @param int $idAlumno ID del alumno
+     * @param int $limite Número de pagos a obtener
+     * @param int $offset Desplazamiento para paginación
+     * @return array Lista de pagos
+     */
+    public function obtenerPorAlumno($idAlumno, $limite = 10, $offset = 0)
+    {
+        $sql = "SELECT p.*, pp.mes_año as periodo 
+                FROM pagos p
+                JOIN periodo_pago pp ON p.id_periodo = pp.id_periodo
+                WHERE p.id_alumno = ? 
+                ORDER BY p.fecha_pago DESC 
+                LIMIT ? OFFSET ?";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("iii", $idAlumno, $limite, $offset);
+        $stmt->execute();
+
+        $resultado = $stmt->get_result();
+        $pagos = [];
+
+        while ($fila = $resultado->fetch_assoc()) {
+            $pagos[] = $fila;
+        }
+
         return $pagos;
     }
 
     /**
-     * Obtener pagos de un periodo específico
+     * Obtiene pagos por período
+     * @param int $idPeriodo ID del período
+     * @return array Lista de pagos
      */
-    public function obtenerPagosPorPeriodo($idPeriodo)
+    public function obtenerPorPeriodo($idPeriodo)
     {
-        $sql = "SELECT p.*, CONCAT(a.nombre, ' ', a.apellidos) as nombre_completo, pp.mes_año as periodo
+        $sql = "SELECT p.*, CONCAT(a.nombre, ' ', a.apellidos) as nombre_alumno 
                 FROM pagos p
                 JOIN alumno a ON p.id_alumno = a.id_alumno
-                JOIN periodo_pago pp ON p.id_periodo = pp.id_periodo
-                WHERE p.id_periodo = ?
+                WHERE p.id_periodo = ? 
                 ORDER BY p.fecha_pago DESC";
-        
+
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param("i", $idPeriodo);
         $stmt->execute();
+
         $resultado = $stmt->get_result();
-        
         $pagos = [];
-        if ($resultado && $resultado->num_rows > 0) {
-            while ($pago = $resultado->fetch_assoc()) {
-                $pagos[] = $pago;
-            }
+
+        while ($fila = $resultado->fetch_assoc()) {
+            $pagos[] = $fila;
         }
-        
+
         return $pagos;
     }
 
     /**
-     * Actualizar el estado de un pago
+     * Obtiene pagos por rango de fechas
+     * @param string $fechaInicio Fecha inicial (YYYY-MM-DD)
+     * @param string $fechaFin Fecha final (YYYY-MM-DD)
+     * @param int|null $idAlumno ID del alumno (opcional)
+     * @return array Lista de pagos
      */
-    public function actualizarEstadoPago($idPago, $estado)
+    public function obtenerPorFechas($fechaInicio, $fechaFin, $idAlumno = null)
+    {
+        // Ajustar las fechas para incluir todo el día
+        $fechaInicio = $fechaInicio . ' 00:00:00';
+        $fechaFin = $fechaFin . ' 23:59:59';
+
+        if ($idAlumno) {
+            // Filtrar por alumno si se especifica
+            $sql = "SELECT p.*, pp.mes_año as periodo, CONCAT(a.nombre, ' ', a.apellidos) as nombre_completo, 
+                    a.id_alumno, a.estatus_pago as estatus_general 
+                    FROM pagos p
+                    JOIN periodo_pago pp ON p.id_periodo = pp.id_periodo
+                    JOIN alumno a ON p.id_alumno = a.id_alumno
+                    WHERE p.fecha_pago BETWEEN ? AND ? 
+                    AND p.id_alumno = ?
+                    ORDER BY p.fecha_pago DESC";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("ssi", $fechaInicio, $fechaFin, $idAlumno);
+        } else {
+            // Consulta sin filtro de alumno
+            $sql = "SELECT p.*, pp.mes_año as periodo, CONCAT(a.nombre, ' ', a.apellidos) as nombre_completo, 
+                    a.id_alumno, a.estatus_pago as estatus_general 
+                    FROM pagos p
+                    JOIN periodo_pago pp ON p.id_periodo = pp.id_periodo
+                    JOIN alumno a ON p.id_alumno = a.id_alumno
+                    WHERE p.fecha_pago BETWEEN ? AND ? 
+                    ORDER BY p.fecha_pago DESC";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("ss", $fechaInicio, $fechaFin);
+        }
+
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        $pagos = [];
+
+        while ($fila = $resultado->fetch_assoc()) {
+            $pagos[] = $fila;
+        }
+
+        return $pagos;
+    }
+
+    /**
+     * Actualiza el estado de un pago
+     * @param int $idPago ID del pago
+     * @param string $nuevoEstado Nuevo estado del pago
+     * @return bool Resultado de la operación
+     */
+    public function actualizarEstado($idPago, $nuevoEstado)
     {
         $sql = "UPDATE pagos SET estado_pago = ? WHERE id_pago = ?";
         $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("si", $estado, $idPago);
-        return $stmt->execute();
-    }
+        $stmt->bind_param("si", $nuevoEstado, $idPago);
 
-    /**
-     * Buscar pagos por término (nombre de alumno, concepto, etc.)
-     */
-    public function buscarPagos($termino)
-    {
-        $busqueda = "%$termino%";
-        
-        $sql = "SELECT p.*, CONCAT(a.nombre, ' ', a.apellidos) as nombre_completo, pp.mes_año as periodo
-                FROM pagos p
-                JOIN alumno a ON p.id_alumno = a.id_alumno
-                JOIN periodo_pago pp ON p.id_periodo = pp.id_periodo
-                WHERE a.nombre LIKE ? OR a.apellidos LIKE ? OR p.concepto LIKE ? OR pp.mes_año LIKE ?
-                ORDER BY p.fecha_pago DESC";
-        
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("ssss", $busqueda, $busqueda, $busqueda, $busqueda);
-        $stmt->execute();
-        $resultado = $stmt->get_result();
-        
-        $pagos = [];
-        if ($resultado && $resultado->num_rows > 0) {
-            while ($pago = $resultado->fetch_assoc()) {
-                $pagos[] = $pago;
+        if ($stmt->execute()) {
+            // Obtener el ID del alumno para actualizar su estatus
+            $pago = $this->obtenerPorId($idPago);
+
+            if ($pago) {
+                $this->actualizarEstatusAlumno($pago['id_alumno']);
             }
+
+            return true;
         }
-        
-        return $pagos;
+
+        return false;
     }
 
     /**
-     * Obtener los últimos pagos registrados
+     * Elimina un pago
+     * @param int $idPago ID del pago a eliminar
+     * @return bool Resultado de la operación
      */
-    public function obtenerUltimosPagos($limite = 10)
+    public function eliminar($idPago)
     {
-        $sql = "SELECT p.*, CONCAT(a.nombre, ' ', a.apellidos) as nombre_completo, pp.mes_año as periodo
-                FROM pagos p
-                JOIN alumno a ON p.id_alumno = a.id_alumno
-                JOIN periodo_pago pp ON p.id_periodo = pp.id_periodo
-                ORDER BY p.fecha_pago DESC
-                LIMIT ?";
-        
+        // Obtener el ID del alumno antes de eliminar
+        $pago = $this->obtenerPorId($idPago);
+        $idAlumno = $pago ? $pago['id_alumno'] : 0;
+
+        // Eliminar el pago
+        $sql = "DELETE FROM pagos WHERE id_pago = ?";
         $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("i", $limite);
-        $stmt->execute();
-        $resultado = $stmt->get_result();
-        
-        $pagos = [];
-        if ($resultado && $resultado->num_rows > 0) {
-            while ($pago = $resultado->fetch_assoc()) {
-                $pagos[] = $pago;
-            }
+        $stmt->bind_param("i", $idPago);
+
+        $resultado = $stmt->execute();
+
+        // Actualizar el estatus del alumno si se eliminó correctamente
+        if ($resultado && $idAlumno > 0) {
+            $this->actualizarEstatusAlumno($idAlumno);
         }
-        
-        return $pagos;
+
+        return $resultado;
     }
 
     /**
-     * Obtener resumen de pagos para el dashboard
+     * Obtiene un resumen de pagos por alumno
+     * @param int $idAlumno ID del alumno
+     * @return array Resumen de pagos
      */
-    public function obtenerResumenPagos()
+    public function obtenerResumenPorAlumno($idAlumno)
     {
-        $resumen = [
-            'total_mes' => 0,
-            'pendientes' => 0,
-            'bloqueados' => 0
+        // Total pagado
+        $sqlPagado = "SELECT SUM(monto) as total_pagado FROM pagos WHERE id_alumno = ? AND estado_pago = 'Pagado'";
+        $stmtPagado = $this->db->prepare($sqlPagado);
+        $stmtPagado->bind_param("i", $idAlumno);
+        $stmtPagado->execute();
+        $resultadoPagado = $stmtPagado->get_result();
+        $filaPagado = $resultadoPagado->fetch_assoc();
+        $totalPagado = $filaPagado['total_pagado'] ?? 0;
+
+        // Total pendiente
+        $sqlPendiente = "SELECT SUM(monto) as total_pendiente FROM pagos WHERE id_alumno = ? AND estado_pago = 'Pendiente'";
+        $stmtPendiente = $this->db->prepare($sqlPendiente);
+        $stmtPendiente->bind_param("i", $idAlumno);
+        $stmtPendiente->execute();
+        $resultadoPendiente = $stmtPendiente->get_result();
+        $filaPendiente = $resultadoPendiente->fetch_assoc();
+        $totalPendiente = $filaPendiente['total_pendiente'] ?? 0;
+
+        // Total vencido
+        $sqlVencido = "SELECT SUM(monto) as total_vencido FROM pagos WHERE id_alumno = ? AND estado_pago = 'Vencido'";
+        $stmtVencido = $this->db->prepare($sqlVencido);
+        $stmtVencido->bind_param("i", $idAlumno);
+        $stmtVencido->execute();
+        $resultadoVencido = $stmtVencido->get_result();
+        $filaVencido = $resultadoVencido->fetch_assoc();
+        $totalVencido = $filaVencido['total_vencido'] ?? 0;
+
+        return [
+            'total_pagado' => $totalPagado,
+            'total_pendiente' => $totalPendiente,
+            'total_vencido' => $totalVencido,
+            'total_general' => $totalPagado + $totalPendiente + $totalVencido
         ];
-
-        // Total recaudado en el mes actual
-        $sql = "SELECT SUM(monto) as total 
-                FROM pagos 
-                WHERE MONTH(fecha_pago) = MONTH(CURRENT_DATE()) 
-                AND YEAR(fecha_pago) = YEAR(CURRENT_DATE())
-                AND estado_pago = 'Pagado'";
-        
-        $resultado = $this->db->query($sql);
-        if ($resultado && $resultado->num_rows > 0) {
-            $row = $resultado->fetch_assoc();
-            $resumen['total_mes'] = $row['total'] ? $row['total'] : 0;
-        }
-
-        // Alumnos con pagos pendientes
-        $sql = "SELECT COUNT(*) as total FROM alumno WHERE estatus_pago = 'Pendiente'";
-        $resultado = $this->db->query($sql);
-        if ($resultado && $resultado->num_rows > 0) {
-            $row = $resultado->fetch_assoc();
-            $resumen['pendientes'] = $row['total'];
-        }
-
-        // Alumnos bloqueados
-        $sql = "SELECT COUNT(*) as total FROM alumno WHERE estatus_pago = 'Bloqueado'";
-        $resultado = $this->db->query($sql);
-        if ($resultado && $resultado->num_rows > 0) {
-            $row = $resultado->fetch_assoc();
-            $resumen['bloqueados'] = $row['total'];
-        }
-
-        return $resumen;
     }
 }

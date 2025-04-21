@@ -30,13 +30,13 @@ $tipo = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['registrar_entrada'])) {
         $codigoNFC = filter_var($_POST['codigo_nfc'], FILTER_SANITIZE_SPECIAL_CHARS);
-        
+
         // Verificar que el código NFC exista
         $tarjeta = $tarjetaController->obtenerPorCodigo($codigoNFC);
-        
+
         if ($tarjeta) {
             $resultado = $asistenciaController->registrarEntrada($tarjeta['id_tarjeta']);
-            
+
             if ($resultado['exito']) {
                 $mensaje = $resultado['mensaje'];
                 $tipo = 'exito';
@@ -51,13 +51,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } elseif (isset($_POST['registrar_salida'])) {
         $codigoNFC = filter_var($_POST['codigo_nfc'], FILTER_SANITIZE_SPECIAL_CHARS);
-        
+
         // Verificar que el código NFC exista
         $tarjeta = $tarjetaController->obtenerPorCodigo($codigoNFC);
-        
+
         if ($tarjeta) {
             $resultado = $asistenciaController->registrarSalida($tarjeta['id_tarjeta']);
-            
+
             if ($resultado['exito']) {
                 $mensaje = $resultado['mensaje'];
                 $tipo = 'exito';
@@ -200,7 +200,7 @@ $registrosRecientes = $asistenciaController->obtenerRegistrosRecientes(10);
 
                     <div class="dashboard__contenedor">
                         <h3>Registros Recientes</h3>
-                        
+
                         <?php if (empty($registrosRecientes)) : ?>
                             <p>No hay registros de asistencia recientes.</p>
                         <?php else : ?>
@@ -226,9 +226,9 @@ $registrosRecientes = $asistenciaController->obtenerRegistrosRecientes(10);
                                                 <?php echo $registro['hora_salida'] ? date('H:i', strtotime($registro['hora_salida'])) : '-'; ?>
                                             </td>
                                             <td class="asistencia__td">
-                                                <?php 
+                                                <?php
                                                 $clase = '';
-                                                switch($registro['tipo_asistencia']) {
+                                                switch ($registro['tipo_asistencia']) {
                                                     case 'Presente':
                                                         $clase = 'asistencia__tipo--entrada';
                                                         break;
@@ -248,7 +248,7 @@ $registrosRecientes = $asistenciaController->obtenerRegistrosRecientes(10);
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
-                            
+
                             <div class="asistencia__paginacion">
                                 <a href="asistencia_registros.php" class="asistencia__enlace">
                                     <i class="fas fa-list"></i> Ver todos los registros
@@ -276,10 +276,10 @@ $registrosRecientes = $asistenciaController->obtenerRegistrosRecientes(10);
                     setTimeout(function() {
                         // Generar un código NFC aleatorio para simular
                         const codigoAleatorio = 'NFC' + Math.floor(Math.random() * 10000).toString().padStart(5, '0');
-                        
+
                         // Rellenar el campo de entrada con el código
                         document.querySelector('input[name="codigo_nfc"]').value = codigoAleatorio;
-                        
+
                         estadoNFC.textContent = 'Tarjeta leída: ' + codigoAleatorio;
                         estadoNFC.className = 'asistencia__estado asistencia__exito';
                     }, 1500);
