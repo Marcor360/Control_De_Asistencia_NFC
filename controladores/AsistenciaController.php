@@ -60,7 +60,7 @@ class AsistenciaController
         if ($alumnoInfo['estatus_pago'] === 'Bloqueado') {
             // Registrar el acceso no permitido
             $this->registrarAccesoBloqueado($idTarjeta, 'Entrada', 'Alumno bloqueado por pagos pendientes');
-            
+
             return [
                 'exito' => false,
                 'mensaje' => 'Acceso denegado: El alumno tiene pagos pendientes'
@@ -83,11 +83,11 @@ class AsistenciaController
 
         // Registrar la entrada
         $resultado = $this->asistencia->registrarEntrada($idTarjeta, $tipoAsistencia);
-        
+
         if ($resultado) {
             // Registrar en control de acceso
             $this->registrarAcceso($idTarjeta, 'Entrada');
-            
+
             return [
                 'exito' => true,
                 'mensaje' => 'Entrada registrada correctamente a las ' . date('H:i')
@@ -141,11 +141,11 @@ class AsistenciaController
 
         // Registrar la salida
         $resultado = $this->asistencia->registrarSalida($registroHoy['id_asistencia']);
-        
+
         if ($resultado) {
             // Registrar en control de acceso
             $this->registrarAcceso($idTarjeta, 'Salida');
-            
+
             return [
                 'exito' => true,
                 'mensaje' => 'Salida registrada correctamente a las ' . date('H:i')
@@ -205,13 +205,13 @@ class AsistenciaController
         // Determinar el tipo de registro (entrada o salida)
         $registroHoy = $this->asistencia->obtenerRegistroPorAlumnoFecha($idAlumno, date('Y-m-d'));
         $tipoRegistro = 'entrada';
-        
+
         if ($registroHoy && $registroHoy['hora_salida']) {
             $tipoRegistro = 'salida';
         }
 
         $alumnoInfo['tipo_registro'] = $tipoRegistro;
-        
+
         return $alumnoInfo;
     }
 

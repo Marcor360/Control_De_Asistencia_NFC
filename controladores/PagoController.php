@@ -17,9 +17,11 @@ class PagoController
     public function registrarPago($datosPago)
     {
         // Validar datos
-        if (empty($datosPago['id_alumno']) || empty($datosPago['id_periodo']) || 
-            empty($datosPago['monto']) || empty($datosPago['concepto']) || 
-            empty($datosPago['metodo_pago'])) {
+        if (
+            empty($datosPago['id_alumno']) || empty($datosPago['id_periodo']) ||
+            empty($datosPago['monto']) || empty($datosPago['concepto']) ||
+            empty($datosPago['metodo_pago'])
+        ) {
             return false;
         }
 

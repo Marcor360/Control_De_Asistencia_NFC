@@ -5,13 +5,15 @@ require_once __DIR__ . '/../modelos/Tarjeta.php';
 require_once __DIR__ . '/../modelos/Alumno.php';
 require_once __DIR__ . '/../modelos/Asistencia.php';
 
-class TarjetaController {
+class TarjetaController
+{
     private $tarjeta;
     private $alumno;
     private $asistencia;
     private $db;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->tarjeta = new Tarjeta();
         $this->alumno = new Alumno();
         $this->asistencia = new Asistencia();
@@ -23,7 +25,8 @@ class TarjetaController {
      * @param string $codigoNFC Código único de la tarjeta NFC
      * @return array Resultado de la operación y datos del alumno
      */
-    public function registrarLectura($codigoNFC) {
+    public function registrarLectura($codigoNFC)
+    {
         $resultado = [
             'exito' => false,
             'mensaje' => '',
@@ -33,7 +36,7 @@ class TarjetaController {
 
         // Verificar si la tarjeta existe
         $tarjeta = $this->tarjeta->buscarPorCodigo($codigoNFC);
-        
+
         if (!$tarjeta) {
             $resultado['mensaje'] = 'La tarjeta no está registrada en el sistema.';
             return $resultado;
@@ -53,7 +56,7 @@ class TarjetaController {
 
         // Obtener datos del alumno
         $alumno = $this->alumno->obtenerPorId($tarjeta['id_alumno']);
-        
+
         if (!$alumno) {
             $resultado['mensaje'] = 'No se encontró información del alumno.';
             return $resultado;
@@ -95,7 +98,7 @@ class TarjetaController {
         } else {
             // No hay registro hoy, registrar entrada
             $idAsistencia = $this->asistencia->registrarEntrada($tarjeta['id_tarjeta'], $fechaActual, $horaActual);
-            
+
             if ($idAsistencia) {
                 $resultado['exito'] = true;
                 $resultado['mensaje'] = 'Entrada registrada correctamente.';
@@ -119,7 +122,8 @@ class TarjetaController {
      * @param int $pagina Página actual para paginación
      * @return array Lista de registros de asistencia
      */
-    public function obtenerUltimosRegistros($limite = 10, $pagina = 1) {
+    public function obtenerUltimosRegistros($limite = 10, $pagina = 1)
+    {
         $offset = ($pagina - 1) * $limite;
         return $this->asistencia->obtenerUltimosRegistros($limite, $offset);
     }
@@ -129,7 +133,8 @@ class TarjetaController {
      * @param int $limitePorPagina Registros por página
      * @return int Número total de páginas
      */
-    public function obtenerTotalPaginas($limitePorPagina = 10) {
+    public function obtenerTotalPaginas($limitePorPagina = 10)
+    {
         $totalRegistros = $this->asistencia->contarRegistros();
         return ceil($totalRegistros / $limitePorPagina);
     }
