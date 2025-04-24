@@ -48,25 +48,30 @@ class Alumno
     }
 
     /**
-     * Crear un nuevo alumno
+     * Registrar un nuevo alumno
      */
-    public function crear($alumno)
+    public function registrar($alumno)
     {
         $sql = "INSERT INTO alumno (nombre, apellidos, carrera, email, telefono, fecha_ingreso, estatus_pago) 
                 VALUES (?, ?, ?, ?, ?, ?, ?)";
-        
+
         $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("sssssss", 
-            $alumno['nombre'], 
-            $alumno['apellidos'], 
-            $alumno['carrera'], 
-            $alumno['email'], 
-            $alumno['telefono'], 
-            $alumno['fecha_ingreso'], 
+        $stmt->bind_param(
+            "sssssss",
+            $alumno['nombre'],
+            $alumno['apellidos'],
+            $alumno['carrera'],
+            $alumno['email'],
+            $alumno['telefono'],
+            $alumno['fecha_ingreso'],
             $alumno['estatus_pago']
         );
 
-        return $stmt->execute();
+        if ($stmt->execute()) {
+            return $this->db->insert_id; // Retorna el ID del alumno insertado
+        }
+
+        return false;
     }
 
     /**
@@ -83,15 +88,16 @@ class Alumno
                 fecha_ingreso = ?, 
                 estatus_pago = ? 
                 WHERE id_alumno = ?";
-        
+
         $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("sssssssi", 
-            $alumno['nombre'], 
-            $alumno['apellidos'], 
-            $alumno['carrera'], 
-            $alumno['email'], 
-            $alumno['telefono'], 
-            $alumno['fecha_ingreso'], 
+        $stmt->bind_param(
+            "sssssssi",
+            $alumno['nombre'],
+            $alumno['apellidos'],
+            $alumno['carrera'],
+            $alumno['email'],
+            $alumno['telefono'],
+            $alumno['fecha_ingreso'],
             $alumno['estatus_pago'],
             $id
         );
@@ -106,7 +112,7 @@ class Alumno
     {
         // Iniciar transacción para asegurar que todas las operaciones se completen o ninguna
         $this->db->begin_transaction();
-        
+
         try {
             // 1. Primero verificamos si el alumno tiene tarjetas asociadas
             $sql = "SELECT id_tarjeta FROM tarjeta_nfc WHERE id_alumno = ?";
@@ -114,7 +120,7 @@ class Alumno
             $stmt->bind_param("i", $id);
             $stmt->execute();
             $resultado = $stmt->get_result();
-            
+
             // Si tiene tarjetas, actualizamos a NULL la referencia del alumno
             if ($resultado->num_rows > 0) {
                 $sql = "UPDATE tarjeta_nfc SET id_alumno = NULL, estado = 'Inactiva' WHERE id_alumno = ?";
@@ -124,7 +130,7 @@ class Alumno
                     throw new Exception("Error al actualizar las tarjetas del alumno");
                 }
             }
-            
+
             // 2. Si tiene pagos, podríamos decidir conservarlos o eliminarlos
             // En este caso, vamos a eliminarlos para que el alumno pueda ser borrado completamente
             $sql = "DELETE FROM pagos WHERE id_alumno = ?";
@@ -133,7 +139,7 @@ class Alumno
             if (!$stmt->execute()) {
                 throw new Exception("Error al eliminar los pagos del alumno");
             }
-            
+
             // 3. Finalmente, eliminamos al alumno
             $sql = "DELETE FROM alumno WHERE id_alumno = ?";
             $stmt = $this->db->prepare($sql);
@@ -141,7 +147,7 @@ class Alumno
             if (!$stmt->execute()) {
                 throw new Exception("Error al eliminar al alumno");
             }
-            
+
             // Confirmar transacción
             $this->db->commit();
             return true;
@@ -162,7 +168,7 @@ class Alumno
         $sql = "SELECT * FROM alumno 
                 WHERE nombre LIKE ? OR apellidos LIKE ? OR carrera LIKE ?
                 ORDER BY apellidos, nombre";
-        
+
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param("sss", $busqueda, $busqueda, $busqueda);
         $stmt->execute();
@@ -176,6 +182,18 @@ class Alumno
         }
 
         return $alumnos;
+    }
+
+    /**
+     * Actualizar estatus de pago de un alumno
+     */
+    public function actualizarEstatusPago($id, $nuevoEstatus)
+    {
+        $sql = "UPDATE alumno SET estatus_pago = ? WHERE id_alumno = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("si", $nuevoEstatus, $id);
+
+        return $stmt->execute();
     }
 
     /**

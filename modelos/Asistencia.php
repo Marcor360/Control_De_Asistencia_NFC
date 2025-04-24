@@ -377,4 +377,116 @@ class Asistencia
 
         return $dias;
     }
+    /**
+     * Obtener asistencias por rango de fechas
+     * @param string $fechaInicio Fecha inicial (YYYY-MM-DD)
+     * @param string $fechaFin Fecha final (YYYY-MM-DD)
+     * @param int|null $idAlumno ID del alumno (opcional)
+     * @return array Lista de asistencias
+     */
+    public function obtenerPorFechas($fechaInicio, $fechaFin, $idAlumno = null)
+    {
+        if ($idAlumno) {
+            // Si se especifica un alumno, filtrar por él
+            $sql = "SELECT a.*, t.codigo_nfc, CONCAT(al.nombre, ' ', al.apellidos) as nombre_alumno, 
+                al.id_alumno, al.carrera
+                FROM asistencia a
+                JOIN tarjeta_nfc t ON a.id_tarjeta = t.id_tarjeta
+                JOIN alumno al ON t.id_alumno = al.id_alumno
+                WHERE a.fecha BETWEEN ? AND ? 
+                AND al.id_alumno = ?
+                ORDER BY a.fecha DESC, a.hora_entrada DESC";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("ssi", $fechaInicio, $fechaFin, $idAlumno);
+        } else {
+            // Consulta sin filtro de alumno
+            $sql = "SELECT a.*, t.codigo_nfc, CONCAT(al.nombre, ' ', al.apellidos) as nombre_alumno, 
+                al.id_alumno, al.carrera
+                FROM asistencia a
+                JOIN tarjeta_nfc t ON a.id_tarjeta = t.id_tarjeta
+                JOIN alumno al ON t.id_alumno = al.id_alumno
+                WHERE a.fecha BETWEEN ? AND ? 
+                ORDER BY a.fecha DESC, a.hora_entrada DESC";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("ss", $fechaInicio, $fechaFin);
+        }
+
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        $asistencias = [];
+
+        while ($fila = $resultado->fetch_assoc()) {
+            $asistencias[] = $fila;
+        }
+
+        return $asistencias;
+    }
+
+    /**
+     * Obtener registro de asistencia de un día específico
+     * @param int $idTarjeta ID de la tarjeta
+     * @param string $fecha Fecha en formato YYYY-MM-DD
+     * @return array|null Datos del registro o null si no existe
+     */
+    public function obtenerRegistroDia($idTarjeta, $fecha)
+    {
+        $sql = "SELECT * FROM asistencia WHERE id_tarjeta = ? AND fecha = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("is", $idTarjeta, $fecha);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+
+        if ($resultado->num_rows > 0) {
+            return $resultado->fetch_assoc();
+        }
+
+        return null;
+    }
+
+    /**
+     * Obtener los últimos registros de asistencia
+     * @param int $limite Número de registros a obtener
+     * @param int $offset Offset para paginación
+     * @return array Lista de registros
+     */
+    public function obtenerUltimosRegistros($limite = 10, $offset = 0)
+    {
+        $sql = "SELECT a.*, CONCAT(al.nombre, ' ', al.apellidos) as nombre_alumno, 
+            t.codigo_nfc, al.carrera
+            FROM asistencia a
+            JOIN tarjeta_nfc t ON a.id_tarjeta = t.id_tarjeta
+            JOIN alumno al ON t.id_alumno = al.id_alumno
+            ORDER BY a.fecha DESC, a.hora_entrada DESC
+            LIMIT ? OFFSET ?";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("ii", $limite, $offset);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+
+        $registros = [];
+        while ($fila = $resultado->fetch_assoc()) {
+            $registros[] = $fila;
+        }
+
+        return $registros;
+    }
+
+    /**
+     * Contar total de registros de asistencia
+     * @return int Total de registros
+     */
+    public function contarRegistros()
+    {
+        $sql = "SELECT COUNT(*) as total FROM asistencia";
+        $resultado = $this->db->query($sql);
+
+        if ($resultado && $fila = $resultado->fetch_assoc()) {
+            return $fila['total'];
+        }
+
+        return 0;
+    }
 }

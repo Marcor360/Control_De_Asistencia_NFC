@@ -138,4 +138,13 @@ class TarjetaController
         $totalRegistros = $this->asistencia->contarRegistros();
         return ceil($totalRegistros / $limitePorPagina);
     }
+
+    /**
+     * Cuenta el número de tarjetas activas en el sistema
+     * @return int Número de tarjetas activas
+     */
+    public function contarTarjetasActivas()
+    {
+        return $this->tarjeta->contarTarjetasActivas();
+    }
 }

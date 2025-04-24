@@ -1,4 +1,5 @@
 <?php
+require_once 'includes/verificar_acceso.php';
 // reportes.php (en la raíz del proyecto)
 // Mostrar todos los errores para diagnóstico
 ini_set('display_errors', 1);

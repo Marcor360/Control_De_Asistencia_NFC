@@ -2,6 +2,7 @@
 // alumnos.php (en la raíz del proyecto)
 require_once 'controladores/AuthController.php';
 require_once 'controladores/AlumnoController.php';
+require_once 'includes/verificar_acceso.php';
 
 // Inicializar controlador de autenticación
 $auth = new AuthController();

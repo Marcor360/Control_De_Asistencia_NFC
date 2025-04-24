@@ -1,6 +1,7 @@
 <?php
 // controladores/AuthController.php
 require_once __DIR__ . '/../modelos/Usuario.php';
+require_once __DIR__ . '/../includes/Permisos.php';
 
 class AuthController
 {
@@ -47,5 +48,27 @@ class AuthController
 
         // Destruir la sesión
         session_destroy();
+    }
+
+    // Verificar si el usuario tiene permiso para realizar una acción en un módulo específico
+    public function tienePermiso($modulo, $accion)
+    {
+        if (!$this->estaAutenticado()) {
+            return false;
+        }
+
+        $rol = $_SESSION['tipo_rol'] ?? '';
+        return Permisos::tienePermiso($rol, $modulo, $accion);
+    }
+
+    // Verificar si el usuario puede acceder a un módulo específico
+    public function puedeAccederModulo($modulo)
+    {
+        if (!$this->estaAutenticado()) {
+            return false;
+        }
+
+        $rol = $_SESSION['tipo_rol'] ?? '';
+        return Permisos::puedeAccederModulo($rol, $modulo);
     }
 }

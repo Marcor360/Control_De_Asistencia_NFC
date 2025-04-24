@@ -77,6 +77,18 @@ class AlumnoController
     }
 
     /**
+     * Alias para el método registrar (solución para el error)
+     * @param array $datos Datos del alumno
+     * @return bool Resultado de la operación
+     */
+    public function crear($datos)
+    {
+        // Adaptamos el resultado del método registrar para devolver solo un booleano
+        $resultado = $this->registrar($datos);
+        return $resultado['exito'];
+    }
+
+    /**
      * Actualiza los datos de un alumno
      * @param int $id ID del alumno
      * @param array $datos Nuevos datos del alumno

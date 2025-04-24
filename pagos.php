@@ -4,6 +4,7 @@ require_once 'controladores/AuthController.php';
 require_once 'controladores/PagoController.php';
 require_once 'controladores/AlumnoController.php';
 require_once 'controladores/PeriodoController.php';
+require_once 'includes/verificar_acceso.php';
 
 // Inicializar controlador de autenticación
 $auth = new AuthController();

@@ -1,6 +1,5 @@
 <?php
-// login-directo.php - Colócalo en la raíz de tu proyecto
-// Este es un script de login simplificado que no depende de clases
+// login.php - Script de login para el sistema de asistencia NFC
 
 // Mostrar errores para diagnóstico
 ini_set('display_errors', 1);
@@ -10,9 +9,13 @@ error_reporting(E_ALL);
 // Iniciar sesión
 session_start();
 
-// Si ya está autenticado, redirigir a dashboard
+// Si ya está autenticado, redirigir según su rol
 if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
-    header('Location: dashboard.php');
+    if ($_SESSION['tipo_rol'] === 'Alumno') {
+        header('Location: alumno_dashboard.php');
+    } else {
+        header('Location: dashboard.php');
+    }
     exit;
 }
 
@@ -66,8 +69,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $update_stmt->bind_param("i", $usuario['id_usuario']);
                 $update_stmt->execute();
 
-                // Redirigir a dashboard
-                header('Location: dashboard.php');
+                // Redirigir según el rol
+                if ($usuario['tipo_rol'] === 'Alumno') {
+                    header('Location: alumno_dashboard.php');
+                } else {
+                    header('Location: dashboard.php');
+                }
                 exit;
             } else {
                 $error = 'Nombre de usuario o contraseña incorrectos.';
