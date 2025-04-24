@@ -7,6 +7,7 @@ require_once 'controladores/PagoController.php';
 require_once 'controladores/TarjetaController.php';
 require_once 'includes/verificar_acceso.php';
 
+
 // Inicializar controlador de autenticación
 $auth = new AuthController();
 
@@ -20,96 +21,67 @@ if (!$auth->estaAutenticado()) {
 $nombreCompleto = $_SESSION['nombre_completo'];
 $tipoRol = $_SESSION['tipo_rol'];
 
-// Inicializar controladores para estadísticas
+// Inicializar controladores
 $alumnoController = new AlumnoController();
 $asistenciaController = new AsistenciaController();
 $pagoController = new PagoController();
 $tarjetaController = new TarjetaController();
 
-// Obtener estadísticas para el dashboard - con manejo de posibles errores
-try {
-    $estadisticasAlumnos = method_exists($alumnoController, 'obtenerEstadisticas')
-        ? $alumnoController->obtenerEstadisticas()
-        : [
-            'total' => 0,
-            'al_corriente' => 0,
-            'pendientes' => 0,
-            'bloqueados' => 0
-        ];
-} catch (Exception $e) {
-    // Si hay un error, establecer valores predeterminados
-    $estadisticasAlumnos = [
-        'total' => 0,
-        'al_corriente' => 0,
-        'pendientes' => 0,
-        'bloqueados' => 0
-    ];
+// Declarar variables con valores predeterminados
+// Estadísticas básicas de alumnos
+$totalAlumnos = 0;
+$alumnosAlCorriente = 0;
+$alumnosPendientes = 0;
+$alumnosBloqueados = 0;
+
+// Establecer variables directamente en lugar de usar obtenerEstadisticas
+// Intento obtener total de alumnos si el método existe
+if (method_exists($alumnoController, 'obtenerTodos')) {
+    $alumnos = $alumnoController->obtenerTodos();
+    $totalAlumnos = count($alumnos);
+
+    // Contar por estatus de pago
+    foreach ($alumnos as $alumno) {
+        if (isset($alumno['estatus_pago'])) {
+            if ($alumno['estatus_pago'] === 'Al corriente') {
+                $alumnosAlCorriente++;
+            } elseif ($alumno['estatus_pago'] === 'Pendiente') {
+                $alumnosPendientes++;
+            } elseif ($alumno['estatus_pago'] === 'Bloqueado') {
+                $alumnosBloqueados++;
+            }
+        }
+    }
 }
 
-try {
-    $estadisticasAsistencia = method_exists($asistenciaController, 'obtenerEstadisticas')
-        ? $asistenciaController->obtenerEstadisticas()
-        : [
-            'hoy' => [
-                'total' => 0,
-                'presentes' => 0,
-                'retardos' => 0,
-                'ausentes' => 0
-            ]
-        ];
-} catch (Exception $e) {
-    // Si hay un error, establecer valores predeterminados
-    $estadisticasAsistencia = [
-        'hoy' => [
-            'total' => 0,
-            'presentes' => 0,
-            'retardos' => 0,
-            'ausentes' => 0
-        ]
-    ];
+// Estadísticas de asistencia - usar valores predeterminados
+$asistenciasHoy = [
+    'total' => 0,
+    'presentes' => 0,
+    'retardos' => 0,
+    'ausentes' => 0
+];
+
+// Información de pagos
+$pagosPendientes = 0;
+$totalMes = 0;
+$alumnosBloqueadosPagos = 0;
+
+// Tarjetas activas
+$tarjetasActivas = 0;
+if (method_exists($tarjetaController, 'contarTarjetasActivas')) {
+    $tarjetasActivas = $tarjetaController->contarTarjetasActivas();
 }
 
-try {
-    $resumenPagos = method_exists($pagoController, 'obtenerResumenPagos')
-        ? $pagoController->obtenerResumenPagos()
-        : [
-            'total_mes' => 0,
-            'pendientes' => 0,
-            'bloqueados' => 0
-        ];
-} catch (Exception $e) {
-    // Si hay un error, establecer valores predeterminados
-    $resumenPagos = [
-        'total_mes' => 0,
-        'pendientes' => 0,
-        'bloqueados' => 0
-    ];
+// Obtener últimos registros para actividad reciente
+$ultimasAsistencias = [];
+if (method_exists($asistenciaController, 'obtenerRegistrosRecientes')) {
+    $ultimasAsistencias = $asistenciaController->obtenerRegistrosRecientes(5);
 }
 
-// Obtener cantidad de tarjetas activas
-try {
-    $tarjetasActivas = method_exists($tarjetaController, 'contarTarjetasActivas')
-        ? $tarjetaController->contarTarjetasActivas()
-        : 0;
-} catch (Exception $e) {
-    $tarjetasActivas = 0;
-}
-
-// Obtener últimos registros para mostrar actividad reciente
-try {
-    $ultimasAsistencias = method_exists($asistenciaController, 'obtenerRegistrosRecientes')
-        ? $asistenciaController->obtenerRegistrosRecientes(5)
-        : [];
-} catch (Exception $e) {
-    $ultimasAsistencias = [];
-}
-
-try {
-    $ultimosPagos = method_exists($pagoController, 'obtenerUltimosPagos')
-        ? $pagoController->obtenerUltimosPagos(5)
-        : [];
-} catch (Exception $e) {
-    $ultimosPagos = [];
+$ultimosPagos = [];
+if (method_exists($pagoController, 'obtenerUltimosPagos')) {
+    $ultimosPagos = $pagoController->obtenerUltimosPagos(5);
 }
 
 // Fecha actual para mostrar
@@ -192,6 +164,14 @@ $diaEspanol = $diasSemana[$diaActual];
                             <span class="dashboard__menu-texto">Reportes</span>
                         </a>
                     </li>
+                    <?php if ($tipoRol === 'Administrador'): ?>
+                        <li class="dashboard__menu-item">
+                            <a href="administrar_usuarios.php" class="dashboard__menu-enlace">
+                                <i class="fas fa-user-cog"></i>
+                                <span class="dashboard__menu-texto">Usuarios</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
                 </ul>
             </aside>
 
@@ -209,19 +189,19 @@ $diaEspanol = $diasSemana[$diaActual];
                             <i class="fas fa-users"></i>
                             Total Alumnos
                         </h3>
-                        <p class="dashboard__widget-contenido"><?php echo $estadisticasAlumnos['total']; ?></p>
+                        <p class="dashboard__widget-contenido"><?php echo $totalAlumnos; ?></p>
                         <div class="dashboard__widget-detalles">
                             <div class="dashboard__widget-detalle">
                                 <span class="dashboard__widget-etiqueta">
                                     <i class="fas fa-check-circle"></i> Al corriente:
                                 </span>
-                                <span class="dashboard__widget-valor"><?php echo $estadisticasAlumnos['al_corriente']; ?></span>
+                                <span class="dashboard__widget-valor"><?php echo $alumnosAlCorriente; ?></span>
                             </div>
                             <div class="dashboard__widget-detalle">
                                 <span class="dashboard__widget-etiqueta">
                                     <i class="fas fa-clock"></i> Pendientes:
                                 </span>
-                                <span class="dashboard__widget-valor"><?php echo $estadisticasAlumnos['pendientes']; ?></span>
+                                <span class="dashboard__widget-valor"><?php echo $alumnosPendientes; ?></span>
                             </div>
                         </div>
                     </div>
@@ -231,19 +211,19 @@ $diaEspanol = $diasSemana[$diaActual];
                             <i class="fas fa-clipboard-check"></i>
                             Asistencias Hoy
                         </h3>
-                        <p class="dashboard__widget-contenido"><?php echo isset($estadisticasAsistencia['hoy']) ? $estadisticasAsistencia['hoy']['total'] : 0; ?></p>
+                        <p class="dashboard__widget-contenido"><?php echo $asistenciasHoy['total']; ?></p>
                         <div class="dashboard__widget-detalles">
                             <div class="dashboard__widget-detalle">
                                 <span class="dashboard__widget-etiqueta">
                                     <i class="fas fa-clock"></i> Retardos:
                                 </span>
-                                <span class="dashboard__widget-valor"><?php echo isset($estadisticasAsistencia['hoy']) ? $estadisticasAsistencia['hoy']['retardos'] : 0; ?></span>
+                                <span class="dashboard__widget-valor"><?php echo $asistenciasHoy['retardos']; ?></span>
                             </div>
                             <div class="dashboard__widget-detalle">
                                 <span class="dashboard__widget-etiqueta">
                                     <i class="fas fa-times-circle"></i> Ausentes:
                                 </span>
-                                <span class="dashboard__widget-valor"><?php echo isset($estadisticasAsistencia['hoy']) ? $estadisticasAsistencia['hoy']['ausentes'] : 0; ?></span>
+                                <span class="dashboard__widget-valor"><?php echo $asistenciasHoy['ausentes']; ?></span>
                             </div>
                         </div>
                     </div>
@@ -253,19 +233,19 @@ $diaEspanol = $diasSemana[$diaActual];
                             <i class="fas fa-credit-card"></i>
                             Pagos Pendientes
                         </h3>
-                        <p class="dashboard__widget-contenido"><?php echo isset($resumenPagos['pendientes']) ? $resumenPagos['pendientes'] : 0; ?></p>
+                        <p class="dashboard__widget-contenido"><?php echo $pagosPendientes; ?></p>
                         <div class="dashboard__widget-detalles">
                             <div class="dashboard__widget-detalle">
                                 <span class="dashboard__widget-etiqueta">
                                     <i class="fas fa-money-bill-wave"></i> Total Mes:
                                 </span>
-                                <span class="dashboard__widget-valor">$<?php echo isset($resumenPagos['total_mes']) ? number_format($resumenPagos['total_mes'], 2) : '0.00'; ?></span>
+                                <span class="dashboard__widget-valor">$<?php echo number_format($totalMes, 2); ?></span>
                             </div>
                             <div class="dashboard__widget-detalle">
                                 <span class="dashboard__widget-etiqueta">
                                     <i class="fas fa-ban"></i> Bloqueados:
                                 </span>
-                                <span class="dashboard__widget-valor"><?php echo isset($resumenPagos['bloqueados']) ? $resumenPagos['bloqueados'] : 0; ?></span>
+                                <span class="dashboard__widget-valor"><?php echo $alumnosBloqueadosPagos; ?></span>
                             </div>
                         </div>
                     </div>
@@ -283,8 +263,8 @@ $diaEspanol = $diasSemana[$diaActual];
                                 </span>
                                 <span class="dashboard__widget-valor">
                                     <?php
-                                    $porcentajeCobertura = $estadisticasAlumnos['total'] > 0
-                                        ? round(($tarjetasActivas / $estadisticasAlumnos['total']) * 100)
+                                    $porcentajeCobertura = $totalAlumnos > 0
+                                        ? round(($tarjetasActivas / $totalAlumnos) * 100)
                                         : 0;
                                     echo $porcentajeCobertura . '%';
                                     ?>

@@ -1,7 +1,7 @@
-// includes/verificar_acceso.php
+
 <?php
 require_once __DIR__ . '/../controladores/AuthController.php';
-
+// includes/verificar_acceso.php
 // Determinar el módulo actual basado en el nombre del archivo
 $rutaActual = basename($_SERVER['PHP_SELF'], '.php');
 

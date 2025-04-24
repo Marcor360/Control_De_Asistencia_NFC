@@ -1,4 +1,3 @@
-// vista_asistencia_alumno.php
 <?php
 require_once 'controladores/AuthController.php';
 require_once 'controladores/AsistenciaController.php';
