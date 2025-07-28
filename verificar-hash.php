@@ -36,12 +36,12 @@ echo "</form>";
 if (isset($_POST['custom_password'])) {
     $custom_password = $_POST['custom_password'];
     $custom_hash = hash('sha256', $custom_password);
-    
+
     echo "<div style='margin-top: 20px; padding: 10px; background-color: #f0f0f0; border: 1px solid #ddd;'>";
     echo "<p>Contraseña: <code>" . htmlspecialchars($custom_password) . "</code></p>";
     echo "<p>Hash SHA-256: <code>" . $custom_hash . "</code></p>";
     echo "</div>";
-    
+
     echo "<div style='margin-top: 10px;'>";
     echo "<p><strong>SQL para insertar usuario con esta contraseña:</strong></p>";
     echo "<pre>";
@@ -61,4 +61,3 @@ foreach (hash_algos() as $algo) {
 echo "</ul>";
 
 echo "<p>PHP Version: " . phpversion() . "</p>";
-?>
