@@ -2,6 +2,7 @@
 // administrar_usuarios.php
 require_once 'controladores/AuthController.php';
 require_once 'controladores/UsuarioController.php';
+require_once 'controladores/AlumnoController.php';
 
 // Inicializar controlador de autenticación
 $auth = new AuthController();
@@ -24,6 +25,8 @@ $tipoRol = $_SESSION['tipo_rol'];
 
 // Inicializar controlador de usuarios
 $usuarioController = new UsuarioController();
+$alumnoController = new AlumnoController();
+
 
 // Variables para mensajes
 $mensaje = '';
@@ -86,6 +89,14 @@ if (isset($_GET['editar']) && !empty($_GET['editar'])) {
 
 // Obtener lista de usuarios
 $usuarios = $usuarioController->obtenerTodos();
+// Obtener alumnos para registro de usuarios (solo los que no tienen cuenta)
+$alumnos = $alumnoController->obtenerTodos();
+$alumnosDisponibles = [];
+foreach ($alumnos as $al) {
+    if (!$usuarioController->obtenerUsuarioPorEmail($al['email'])) {
+        $alumnosDisponibles[] = $al;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -97,6 +108,19 @@ $usuarios = $usuarioController->obtenerTodos();
     <link rel="stylesheet" href="build/css/app.css">
     <!-- Fontawesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-wrapper i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+        }
+    </style>
 </head>
 
 <body>
@@ -168,6 +192,19 @@ $usuarios = $usuarioController->obtenerTodos();
                         <?php echo $mensaje; ?>
                     </div>
                 <?php endif; ?>
+                <?php if (!$usuarioEditar): ?>
+                    <div class="formulario__campo">
+                        <label for="id_alumno" class="formulario__label">Alumno:</label>
+                        <select id="id_alumno" class="formulario__select">
+                            <option value="">-- Seleccionar Alumno --</option>
+                            <?php foreach ($alumnosDisponibles as $al): ?>
+                                <option value="<?php echo $al['id_alumno']; ?>" data-nombre="<?php echo htmlspecialchars($al['nombre']); ?>" data-apellidos="<?php echo htmlspecialchars($al['apellidos']); ?>" data-email="<?php echo htmlspecialchars($al['email']); ?>">
+                                    <?php echo $al['nombre'] . ' ' . $al['apellidos']; ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                <?php endif; ?>
 
                 <div class="dashboard__contenedor">
                     <h3><?php echo $usuarioEditar ? 'Editar Usuario' : 'Crear Nuevo Usuario'; ?></h3>
@@ -199,7 +236,10 @@ $usuarios = $usuarioController->obtenerTodos();
 
                         <div class="formulario__campo">
                             <label for="contrasena" class="formulario__label">Contraseña:</label>
-                            <input type="password" id="contrasena" name="contrasena" class="formulario__input" <?php echo $usuarioEditar ? '' : 'required'; ?>>
+                            <div class="password-wrapper">
+                                <input type="password" id="contrasena" name="contrasena" class="formulario__input" <?php echo $usuarioEditar ? '' : 'required'; ?>>
+                                <i id="toggleContrasena" class="fas fa-eye"></i>
+                            </div>
                             <?php if ($usuarioEditar): ?>
                                 <p class="formulario__texto">Dejar en blanco para mantener la contraseña actual</p>
                             <?php endif; ?>
@@ -266,7 +306,9 @@ $usuarios = $usuarioController->obtenerTodos();
                                             <a href="?editar=<?php echo $usuario['id_usuario']; ?>" class="tabla__accion tabla__accion--editar">
                                                 <i class="fas fa-edit"></i> Editar
                                             </a>
-
+                                            <a href="update-password.php?user=<?php echo urlencode($usuario['nombre_usuario']); ?>" class="tabla__accion tabla__accion--editar">
+                                                <i class="fas fa-key"></i> Contraseña
+                                            </a>
                                             <!-- No permitir eliminar al propio usuario -->
                                             <?php if ($usuario['id_usuario'] != $_SESSION['id_usuario']): ?>
                                                 <form method="POST" onsubmit="return confirm('¿Está seguro de eliminar este usuario?');" style="display: inline;">
@@ -288,6 +330,44 @@ $usuarios = $usuarioController->obtenerTodos();
     </div>
 
     <script src="build/js/bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.getElementById('toggleContrasena');
+            if (toggle) {
+                toggle.addEventListener('click', function() {
+                    const input = document.getElementById('contrasena');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        toggle.classList.remove('fa-eye');
+                        toggle.classList.add('fa-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        toggle.classList.remove('fa-eye-slash');
+                        toggle.classList.add('fa-eye');
+                    }
+                });
+            }
+
+            const alumnoSelect = document.getElementById('id_alumno');
+            if (alumnoSelect) {
+                alumnoSelect.addEventListener('change', function() {
+                    const opt = alumnoSelect.options[alumnoSelect.selectedIndex];
+                    const nombre = document.getElementById('nombre');
+                    const apellidos = document.getElementById('apellidos');
+                    const email = document.getElementById('email');
+                    if (opt && opt.value !== '') {
+                        nombre.value = opt.dataset.nombre || '';
+                        apellidos.value = opt.dataset.apellidos || '';
+                        email.value = opt.dataset.email || '';
+                    } else {
+                        nombre.value = '';
+                        apellidos.value = '';
+                        email.value = '';
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

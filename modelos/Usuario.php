@@ -125,6 +125,23 @@ class Usuario
 
         return null;
     }
+    /**
+     * Obtener un usuario por su email
+     */
+    public function obtenerPorEmail($email)
+    {
+        $sql = "SELECT * FROM usuario WHERE email = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+
+        $resultado = $stmt->get_result();
+        if ($resultado->num_rows > 0) {
+            return $resultado->fetch_assoc();
+        }
+
+        return null;
+    }
 
     /**
      * Verificar si existe usuario con nombre de usuario o email

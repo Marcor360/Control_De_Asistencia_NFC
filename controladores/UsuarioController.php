@@ -141,4 +141,11 @@ class UsuarioController
     {
         return $this->usuario->obtenerPorId($idUsuario);
     }
+    /**
+     * Obtener un usuario por email
+     */
+    public function obtenerUsuarioPorEmail($email)
+    {
+        return $this->usuario->obtenerPorEmail($email);
+    }
 }
