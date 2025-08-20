@@ -34,70 +34,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($nombre_usuario) || empty($contrasena)) {
         $error = 'Por favor, complete todos los campos.';
     } else {
-        try {
-            // Conectar a la base de datos directamente
-            $conexion = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+        // Verificar que el driver MySQL para PDO esté disponible
+        if (!in_array('mysql', PDO::getAvailableDrivers())) {
+            $error = 'Error del sistema: controlador de base de datos no disponible.';
+        } else {
+            try {
+                // Conectar a la base de datos usando PDO
+                $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
+                $pdo = new PDO($dsn, DB_USER, DB_PASS, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                ]);
 
-            if ($conexion->connect_error) {
-                throw new Exception("Error de conexión a la base de datos: " . $conexion->connect_error);
-            }
+                // Generar hash de la contraseña
+                $contrasena_hash = hash('sha256', $contrasena);
 
-            // Generar hash de la contraseña
-            $contrasena_hash = hash('sha256', $contrasena);
+                // Consultar usuario
+                $query = "SELECT * FROM usuario WHERE nombre_usuario = :usuario AND contraseña = :contrasena";
+                $stmt = $pdo->prepare($query);
+                $stmt->bindParam(':usuario', $nombre_usuario);
+                $stmt->bindParam(':contrasena', $contrasena_hash);
+                $stmt->execute();
+                $usuario = $stmt->fetch();
 
-            // Consultar usuario
-            $query = "SELECT * FROM usuario WHERE nombre_usuario = ? AND contraseña = ?";
-            $stmt = $conexion->prepare($query);
-            $stmt->bind_param("ss", $nombre_usuario, $contrasena_hash);
-            $stmt->execute();
-            $resultado = $stmt->get_result();
+                if ($usuario) {
+                    // Usuario encontrado
+                    $_SESSION['loggedin'] = true;
+                    $_SESSION['id_usuario'] = $usuario['id_usuario'];
+                    $_SESSION['nombre_usuario'] = $usuario['nombre_usuario'];
+                    $_SESSION['nombre_completo'] = $usuario['nombre'] . ' ' . $usuario['apellidos'];
+                    $_SESSION['tipo_rol'] = $usuario['tipo_rol'];
 
-            if ($resultado->num_rows === 1) {
-                // Usuario encontrado
-                $usuario = $resultado->fetch_assoc();
+                    // Actualizar último acceso
+                    $update = "UPDATE usuario SET ultimo_acceso = NOW() WHERE id_usuario = :id";
+                    $update_stmt = $pdo->prepare($update);
+                    $update_stmt->bindParam(':id', $usuario['id_usuario'], PDO::PARAM_INT);
+                    $update_stmt->execute();
 
-                // Guardar datos en la sesión
-                $_SESSION['loggedin'] = true;
-                $_SESSION['id_usuario'] = $usuario['id_usuario'];
-                $_SESSION['nombre_usuario'] = $usuario['nombre_usuario'];
-                $_SESSION['nombre_completo'] = $usuario['nombre'] . ' ' . $usuario['apellidos'];
-                $_SESSION['tipo_rol'] = $usuario['tipo_rol'];
-
-                // Actualizar último acceso
-                $update = "UPDATE usuario SET ultimo_acceso = NOW() WHERE id_usuario = ?";
-                $update_stmt = $conexion->prepare($update);
-                $update_stmt->bind_param("i", $usuario['id_usuario']);
-                $update_stmt->execute();
-
-                // Redirigir según el rol
-                if ($usuario['tipo_rol'] === 'Alumno') {
-                    header('Location: alumno_dashboard.php');
+                    // Redirigir según el rol
+                    if ($usuario['tipo_rol'] === 'Alumno') {
+                        header('Location: alumno_dashboard.php');
+                    } else {
+                        header('Location: dashboard.php');
+                    }
+                    exit;
                 } else {
-                    header('Location: dashboard.php');
-                }
-                exit;
-            } else {
-                $error = 'Nombre de usuario o contraseña incorrectos.';
+                    $error = 'Nombre de usuario o contraseña incorrectos.';
 
-                // Verificar si el usuario existe
-                $check_query = "SELECT * FROM usuario WHERE nombre_usuario = ?";
-                $check_stmt = $conexion->prepare($check_query);
-                $check_stmt->bind_param("s", $nombre_usuario);
-                $check_stmt->execute();
-                $check_result = $check_stmt->get_result();
+                    // Verificar si el usuario existe
+                    $check_query = "SELECT * FROM usuario WHERE nombre_usuario = :usuario";
+                    $check_stmt = $pdo->prepare($check_query);
+                    $check_stmt->bindParam(':usuario', $nombre_usuario);
+                    $check_stmt->execute();
+                    $check_result = $check_stmt->fetch();
 
-                if ($check_result->num_rows === 1) {
-                    // Usuario existe pero contraseña incorrecta
-                    $error = 'Contraseña incorrecta para el usuario "' . htmlspecialchars($nombre_usuario) . '".';
-                } else {
-                    // Usuario no existe
-                    $error = 'El usuario "' . htmlspecialchars($nombre_usuario) . '" no existe.';
+                    if ($check_result) {
+                        // Usuario existe pero contraseña incorrecta
+                        $error = 'Contraseña incorrecta para el usuario "' . htmlspecialchars($nombre_usuario) . '".';
+                    } else {
+                        // Usuario no existe
+                        $error = 'El usuario "' . htmlspecialchars($nombre_usuario) . '" no existe.';
+                    }
                 }
+
+                // Cerrar conexión
+                $pdo = null;
+            } catch (PDOException $e) {
+                $error = 'Error del sistema: ' . $e->getMessage();
             }
-
-            $conexion->close();
-        } catch (Exception $e) {
-            $error = 'Error del sistema: ' . $e->getMessage();
         }
     }
 }
