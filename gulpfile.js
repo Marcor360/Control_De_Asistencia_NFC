@@ -12,8 +12,8 @@ import rename from 'gulp-rename'
 const sass = gulpSass(dartSass)
 
 const paths = {
-    scss: 'src/scss/**/*.scss',
-    js: 'src/js/**/*.js'
+    scss: 'SRC/SCSS/**/*.scss',
+    js: 'SRC/JS/**/*.js'
 }
 
 export function css(done) {
@@ -35,9 +35,9 @@ export function js(done) {
 }
 
 export async function imagenes(done) {
-    const srcDir = './src/img';
+    const srcDir = './SRC/IMG';
     const buildDir = './build/img';
-    const images = await glob('./src/img/**/*')
+    const images = await glob('./SRC/IMG/**/*')
 
     images.forEach(file => {
         const relativePath = path.relative(srcDir, path.dirname(file));
@@ -76,7 +76,7 @@ function procesarImagenes(file, outputSubDir) {
 export function dev() {
     watch(paths.scss, css);
     watch(paths.js, js);
-    watch('src/img/**/*.{png,jpg}', imagenes)
+    watch('SRC/IMG/**/*.{png,jpg}', imagenes)
 }
 
 export default series(js, css, imagenes, dev)

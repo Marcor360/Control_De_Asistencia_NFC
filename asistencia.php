@@ -263,31 +263,6 @@ $registrosRecientes = $asistenciaController->obtenerRegistrosRecientes(10);
     </div>
 
     <script src="build/js/bundle.min.js"></script>
-    <script>
-        // Simulación de lectura de tarjeta NFC
-        document.addEventListener('DOMContentLoaded', function() {
-            const lectorNFC = document.querySelector('.asistencia__nfc');
-            if (lectorNFC) {
-                lectorNFC.addEventListener('click', function() {
-                    const estadoNFC = document.querySelector('#estado-lector');
-                    estadoNFC.textContent = 'Leyendo tarjeta...';
-                    estadoNFC.className = 'asistencia__estado asistencia__leyendo';
-
-                    // Simular tiempo de lectura
-                    setTimeout(function() {
-                        // Generar un código NFC aleatorio para simular
-                        const codigoAleatorio = 'NFC' + Math.floor(Math.random() * 10000).toString().padStart(5, '0');
-
-                        // Rellenar el campo de entrada con el código
-                        document.querySelector('input[name="codigo_nfc"]').value = codigoAleatorio;
-
-                        estadoNFC.textContent = 'Tarjeta leída: ' + codigoAleatorio;
-                        estadoNFC.className = 'asistencia__estado asistencia__exito';
-                    }, 1500);
-                });
-            }
-        });
-    </script>
 </body>
 
 </html>
